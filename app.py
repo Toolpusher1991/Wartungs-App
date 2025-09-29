@@ -224,17 +224,29 @@ class OneTimeToken(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     used = db.Column(db.Boolean, default=False)
 
-# Admin-Account erstellen
+# Admin-Account erstellen (SICHER: Zufällige Passwörter)
 def create_admin():
+    import secrets
+    import string
+    
+    # Sicherheitsfunktion: Zufällige Passwörter generieren
+    def generate_secure_password(length=12):
+        chars = string.ascii_letters + string.digits + "!@#$%^&*"
+        return ''.join(secrets.choice(chars) for _ in range(length))
+    
     admin = User.query.filter_by(username='nils').first()
     if not admin:
-        admin = User(username='nils', password=generate_password_hash('admin'), email='nils.wanning@gmail.com')
+        secure_pw = generate_secure_password()
+        admin = User(username='nils', password=generate_password_hash(secure_pw), email='admin@company.com')
         db.session.add(admin)
+        print(f"🔐 ADMIN ACCOUNT: Username: nils, Password: {secure_pw}")
     
     superadmin = User.query.filter_by(username='Admin').first()
     if not superadmin:
-        superadmin = User(username='Admin', password=generate_password_hash('Admin'), email='admin@example.com')
+        secure_pw2 = generate_secure_password()
+        superadmin = User(username='Admin', password=generate_password_hash(secure_pw2), email='superadmin@company.com')
         db.session.add(superadmin)
+        print(f"🔐 SUPERADMIN ACCOUNT: Username: Admin, Password: {secure_pw2}")
     db.session.commit()
 
 def get_responsible_user(anlage, abteilung):
