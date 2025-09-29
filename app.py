@@ -28,14 +28,21 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # CSRF-Schutz temporär deaktiviert (TODO: Token zu Formularen hinzufügen)
 # csrf = CSRFProtect(app)
 
-# Logging konfigurieren
+# Logging konfigurieren (Cloud-friendly)
+import os
+log_handlers = [logging.StreamHandler()]
+
+# Nur lokales File-Logging wenn logs/ Verzeichnis existiert
+if os.path.exists('logs') or os.makedirs('logs', exist_ok=True):
+    try:
+        log_handlers.append(logging.FileHandler('logs/wartungsapp.log'))
+    except:
+        pass  # Falls File-Logging nicht möglich, nur Console
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/wartungsapp.log'),
-        logging.StreamHandler()
-    ]
+    handlers=log_handlers
 )
 
 # Rate-Limiting für Login-Versuche (einfache Implementation)
