@@ -1,0 +1,20 @@
+# Wartungs-App - Optimierte Dependencies
+# Core Flask Components
+flask==3.0.0
+flask-sqlalchemy==3.1.1
+flask-mail==0.9.1
+flask-wtf==1.2.1
+
+# Security & Utilities
+werkzeug==3.0.1
+python-dotenv==1.0.0
+
+# Image Processing & Optimization
+Pillow==10.1.0
+
+# Database
+SQLAlchemy==2.0.23
+
+# Development (optional)
+# flask-migrate==4.0.5  # For database migrations
+# gunicorn==21.2.0      # For production deployment

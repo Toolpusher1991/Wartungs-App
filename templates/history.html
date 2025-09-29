@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}Problem-Historie{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <!-- Header Card -->
+        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #374151 100%);">
+            <div class="card-body p-4 text-center text-white">
+                <div class="d-inline-block bg-white rounded-circle p-3 mb-3">
+                    <i class="bi bi-clock-history text-primary fs-3"></i>
+                </div>
+                <h1 class="card-title fw-semibold mb-1">Problem-Historie</h1>
+                <p class="mb-0 opacity-75">Verwaltung abgearbeiteter Probleme</p>
+            </div>
+        </div>
+
+        <!-- Statistiken -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                    <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ total_archived }}</h5>
+                                <p class="text-muted mb-0">Abgearbeitete Probleme</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                    <i class="bi bi-camera-fill text-info fs-4"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ problems_with_images }}</h5>
+                                <p class="text-muted mb-0">Mit Dokumentation</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suchfilter -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-funnel me-2 text-muted"></i>Filter & Suche
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Anlage</label>
+                        <select name="bohrturm" class="form-select">
+                            <option value="">Alle Anlagen</option>
+                            {% for bohrturm in bohrtuerme %}
+                                <option value="{{ bohrturm }}" {% if request.args.get('bohrturm') == bohrturm %}selected{% endif %}>
+                                    {{ bohrturm }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Abteilung</label>
+                        <select name="abteilung" class="form-select">
+                            <option value="">Alle Abteilungen</option>
+                            {% for abteilung in abteilungen %}
+                                <option value="{{ abteilung }}" {% if request.args.get('abteilung') == abteilung %}selected{% endif %}>
+                                    {{ abteilung }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Von Datum</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Bis Datum</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-search me-1"></i>Filtern
+                        </button>
+                        <a href="{{ url_for('history') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </a>
+                    </div>
+                </form>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <input type="text" name="search" class="form-control" placeholder="Suche in Problembeschreibung, Kommentaren und Maßnahmen..." 
+                               value="{{ request.args.get('search', '') }}" onkeypress="if(event.key=='Enter'){this.form.submit()}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk-Aktionen -->
+        {% if problems %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <form id="bulk-delete-form" method="POST" action="{{ url_for('bulk_delete_from_history') }}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <input type="checkbox" id="select-all" class="form-check-input me-2" onchange="toggleAllCheckboxes()">
+                            <label for="select-all" class="form-check-label fw-semibold">Alle auswählen</label>
+                            <span id="selected-count" class="badge bg-secondary ms-2">0 ausgewählt</span>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmBulkDelete()" disabled id="bulk-delete-btn">
+                            <i class="bi bi-trash me-1"></i>Ausgewählte löschen
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Problem-Tabelle -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-table me-2 text-muted"></i>Abgearbeitete Probleme
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if problems %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50"></th>
+                                    <th>Anlage</th>
+                                    <th>System</th>
+                                    <th>Problem</th>
+                                    <th>Bearbeitet von</th>
+                                    <th>Abgeschlossen</th>
+                                    <th width="100">Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for problem in problems %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="selected_problems" value="{{ problem.id }}" 
+                                                   class="form-check-input problem-checkbox" onchange="updateBulkActions()" 
+                                                   form="bulk-delete-form">
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ problem.bohrturm }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold">{{ problem.system }}</div>
+                                            <small class="text-muted">{{ problem.abteilung }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="problem-text">{{ problem.problem[:100] }}{% if problem.problem|length > 100 %}...{% endif %}</div>
+                                            {% if problem.image_list %}
+                                                <small class="text-info">
+                                                    <i class="bi bi-camera me-1"></i>{{ problem.image_list|length }} Bild(er)
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if problem.verantwortlicher %}
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle">{{ problem.verantwortlicher[0].upper() }}</div>
+                                                    <span class="ms-2">{{ problem.verantwortlicher }}</span>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">Nicht zugewiesen</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ problem.status_changed_at.strftime('%d.%m.%Y %H:%M') }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                                        data-bs-toggle="modal" data-bs-target="#detailModal{{ problem.id }}">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <form method="POST" action="{{ url_for('delete_from_history', problem_id=problem.id) }}" 
+                                                      style="display: inline;" onsubmit="return confirm('Problem wirklich löschen?')">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted fs-1 mb-3"></i>
+                        <h5 class="text-muted">Keine abgearbeiteten Probleme gefunden</h5>
+                        <p class="text-muted">Ändern Sie die Filterkriterien oder warten Sie auf abgearbeitete Probleme.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail-Modals für jedes Problem -->
+    {% for problem in problems %}
+    <div class="modal fade" id="detailModal{{ problem.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Problem Details #{{ problem.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Anlage:</strong> {{ problem.bohrturm }}<br>
+                            <strong>System:</strong> {{ problem.system }}<br>
+                            <strong>Abteilung:</strong> {{ problem.abteilung }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Bearbeitet von:</strong> {{ problem.verantwortlicher or 'Nicht zugewiesen' }}<br>
+                            <strong>Abgeschlossen:</strong> {{ problem.status_changed_at.strftime('%d.%m.%Y %H:%M') }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Problembeschreibung:</strong>
+                        <div class="bg-light p-3 rounded">{{ problem.problem }}</div>
+                    </div>
+                    {% if problem.massnahmen %}
+                    <div class="mb-3">
+                        <strong>Durchgeführte Maßnahmen:</strong>
+                        <div class="bg-light p-3 rounded">{{ problem.massnahmen }}</div>
+                    </div>
+                    {% endif %}
+                    {% if problem.bestellung_benoetigt %}
+                    <div class="mb-3">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning bg-opacity-10">
+                                <strong class="text-warning">
+                                    <i class="bi bi-cart-plus me-2"></i>Material-Bestellung war erforderlich
+                                </strong>
+                            </div>
+                            <div class="card-body">
+                                {% if problem.mm_nummer %}
+                                <div class="mb-2">
+                                    <strong><i class="bi bi-upc-scan me-1"></i>MM-Nummer:</strong> {{ problem.mm_nummer }}
+                                </div>
+                                {% endif %}
+                                {% if problem.teil_beschreibung %}
+                                <div class="mb-2">
+                                    <strong><i class="bi bi-tag me-1"></i>Teil-Beschreibung:</strong> {{ problem.teil_beschreibung }}
+                                </div>
+                                {% endif %}
+                                {% if problem.besteller_user %}
+                                <div class="mb-2">
+                                    <strong><i class="bi bi-person-gear me-1"></i>Besteller:</strong> {{ problem.besteller_user.username }} ({{ problem.besteller_user.email }})
+                                </div>
+                                {% endif %}
+                                {% if problem.bestellung_bestaetigt %}
+                                <div class="alert alert-success border-success p-2 mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                                        <strong>Bestellung bestätigt</strong>
+                                        <small class="text-muted ms-2">({{ problem.bestellung_bestaetigt_am.strftime('%d.%m.%Y %H:%M') }})</small>
+                                    </div>
+                                    {% if problem.pr_nummer %}
+                                    <div class="mt-1">
+                                        <strong><i class="bi bi-hash me-1"></i>PR-Nummer:</strong> {{ problem.pr_nummer }}
+                                    </div>
+                                    {% endif %}
+                                    {% if problem.lieferdatum %}
+                                    <div class="mt-1">
+                                        <strong><i class="bi bi-calendar-event me-1"></i>Lieferdatum:</strong> {{ problem.lieferdatum.strftime('%d.%m.%Y') }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning border-warning p-2 mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-clock me-2 text-warning"></i>
+                                        <strong>Bestellung war ausstehend</strong>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if problem.loeschen_kommentar %}
+                    <div class="mb-3">
+                        <strong>Abschlusskommentar:</strong>
+                        <div class="bg-light p-3 rounded">{{ problem.loeschen_kommentar }}</div>
+                    </div>
+                    {% endif %}
+                    {% if problem.image_list %}
+                    <div class="mb-3">
+                        <strong>Bilder ({{ problem.image_list|length }}):</strong>
+                        <div class="row mt-2">
+                            {% for image in problem.image_list %}
+                            <div class="col-md-3 col-sm-4 col-6 mb-2">
+                                <img src="{{ url_for('static', filename='uploads/' + image) }}" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     style="cursor: pointer; height: 80px; width: 100%; object-fit: cover;"
+                                     onclick="window.open(this.src, '_blank')">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <script>
+        function toggleAllCheckboxes() {
+            const selectAll = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.problem-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const checkboxes = document.querySelectorAll('.problem-checkbox:checked');
+            const selectedCount = checkboxes.length;
+            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            const selectedCountSpan = document.getElementById('selected-count');
+            
+            selectedCountSpan.textContent = `${selectedCount} ausgewählt`;
+            bulkDeleteBtn.disabled = selectedCount === 0;
+            
+            if (selectedCount > 0) {
+                bulkDeleteBtn.classList.remove('btn-outline-danger');
+                bulkDeleteBtn.classList.add('btn-danger');
+            } else {
+                bulkDeleteBtn.classList.remove('btn-danger');
+                bulkDeleteBtn.classList.add('btn-outline-danger');
+            }
+        }
+
+        function confirmBulkDelete() {
+            const checkboxes = document.querySelectorAll('.problem-checkbox:checked');
+            const count = checkboxes.length;
+            
+            if (count === 0) return;
+            
+            const message = `Sind Sie sicher, dass Sie ${count} Problem(e) dauerhaft aus der Historie löschen möchten?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`;
+            
+            if (confirm(message)) {
+                document.getElementById('bulk-delete-form').submit();
+            }
+        }
+
+        // Auto-submit search on Enter
+        document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.closest('form').submit();
+            }
+        });
+    </script>
+{% endblock %}

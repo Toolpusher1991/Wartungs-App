@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}Admin: Benutzerverwaltung{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <!-- Header Card -->
+        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+            <div class="card-body p-4 text-center">
+                <div class="d-inline-block bg-white rounded-circle p-3 mb-3">
+                    <i class="bi bi-people-fill text-primary fs-3"></i>
+                </div>
+                <h1 class="card-title fw-semibold text-dark mb-1">Benutzerverwaltung</h1>
+                <p class="text-muted mb-0">Verwalten Sie Benutzerkonten und Berechtigungen</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom">
+                <ul class="nav nav-tabs card-header-tabs" id="adminTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" href="{{ url_for('admin_users') }}">
+                            <i class="bi bi-people-fill me-2"></i>Benutzerverwaltung
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="{{ url_for('admin_emails') }}">
+                            <i class="bi bi-envelope-fill me-2"></i>Email-Bot
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- User List -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-person-lines-fill me-2 text-muted"></i>Benutzer ({{ users|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for u in users %}
+                        <div class="border-bottom p-3 {{ 'bg-light' if u.username in ['nils', 'Admin'] else '' }}">
+                            <div class="row align-items-center">
+                                <!-- User Info -->
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary rounded-circle p-2 me-3">
+                                            <i class="bi bi-person-fill text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">{{ u.username }}</h6>
+                                            <small class="text-muted">ID: {{ u.id }}</small>
+                                            {% if u.username in ['nils', 'Admin'] %}
+                                                <span class="badge bg-success ms-2">Admin</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Email Management -->
+                                <div class="col-md-4">
+                                    <form method="post" class="d-flex align-items-center" id="emailForm{{ u.id }}">
+                                        <input type="hidden" name="update_email_user_id" value="{{ u.id }}">
+                                        <input type="email" name="new_email" class="form-control form-control-sm me-2" 
+                                               value="{{ u.email }}" placeholder="E-Mail" required 
+                                               id="email{{ u.id }}" onchange="enableSaveButton({{ u.id }})">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm" 
+                                                id="saveBtn{{ u.id }}" disabled>
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="col-md-4">
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <!-- Password Reset -->
+                                        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" 
+                                                data-bs-target="#resetModal{{ u.id }}">
+                                            <i class="bi bi-key"></i>
+                                        </button>
+                                        
+                                        <!-- Delete User -->
+                                        {% if u.username not in ['nils', 'Admin'] %}
+                                        <form method="post" action="{{ url_for('delete_user', user_id=u.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                    onclick="return confirm('Benutzer {{ u.username }} wirklich löschen?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Password Reset Modal - Anti-Flicker Version -->
+                        <div class="modal fade" id="resetModal{{ u.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Passwort zurücksetzen</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                                data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="post" id="passwordForm{{ u.id }}" onsubmit="handlePasswordSubmit(event, {{ u.id }})">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="reset_user_id" value="{{ u.id }}">
+                                            <label class="form-label">Neues Passwort für <strong>{{ u.username }}</strong>:</label>
+                                            <input type="text" name="new_password" class="form-control" 
+                                                   placeholder="Neues Passwort eingeben" required id="passwordInput{{ u.id }}"
+                                                   autocomplete="new-password">
+                                            <div class="mt-2" id="statusMessage{{ u.id }}" style="display: none;">
+                                                <div class="alert alert-info">
+                                                    <i class="bi bi-hourglass-split me-2"></i>Passwort wird gesetzt...
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
+                                                    data-bs-dismiss="modal">Abbrechen</button>
+                                            <button type="submit" class="btn btn-warning" id="passwordSubmitBtn{{ u.id }}">
+                                                Passwort zurücksetzen
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create User Card -->
+            <div class="col-lg-4">
+                <!-- Server Management Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-gear-fill me-2 text-muted"></i>Server-Management
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-warning" onclick="restartServer()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Server neu starten
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="clearCache()">
+                                <i class="bi bi-trash me-2"></i>Browser-Cache leeren
+                            </button>
+                        </div>
+                        <small class="form-text text-muted mt-2">
+                            Verwenden Sie diese Buttons nach Code-Änderungen
+                        </small>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-person-plus-fill me-2 text-muted"></i>Neuen Benutzer erstellen
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            <input type="hidden" name="create_user" value="1">
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-person me-1"></i>Benutzername
+                                </label>
+                                <input type="text" name="new_username" class="form-control" 
+                                       placeholder="Benutzername eingeben" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-envelope me-1"></i>E-Mail-Adresse
+                                </label>
+                                <input type="email" name="new_email" class="form-control" 
+                                       placeholder="E-Mail eingeben" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-key me-1"></i>Temporäres Passwort
+                                </label>
+                                <input type="text" name="new_password" class="form-control" 
+                                       placeholder="Temporäres Passwort" required>
+                                <small class="form-text text-muted">
+                                    Der Benutzer erhält eine E-Mail zum Setzen eines eigenen Passworts
+                                </small>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-person-plus me-2"></i>Benutzer erstellen
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Einfache E-Mail-Button Aktivierung
+        function enableSaveButton(userId) {
+            const saveBtn = document.getElementById('saveBtn' + userId);
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('btn-outline-secondary');
+                saveBtn.classList.add('btn-success');
+            }
+        }
+        
+        // Einfaches Password Submit (Backend macht Redirect)
+        function handlePasswordSubmit(event, userId) {
+            const passwordInput = document.getElementById('passwordInput' + userId);
+            if (!passwordInput.value.trim()) {
+                event.preventDefault();
+                passwordInput.focus();
+                alert('Bitte Passwort eingeben!');
+                return false;
+            }
+            // Form normal senden - Backend macht redirect
+            return true;
+        }
+            
+            // Status-Message anzeigen
+            if (statusMessage) {
+                statusMessage.style.display = 'block';
+            }
+            
+            // Modal komplett sperren
+            if (modal) {
+                modal.style.pointerEvents = 'none';
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.style.pointerEvents = 'none';
+                }
+            }
+            
+            // Alle Modal-Close-Buttons deaktivieren
+            const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
+            closeButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.pointerEvents = 'none';
+            });
+            
+            // Form sofort senden (kein Timeout - das verursachte das Flackern!)
+            form.submit();
+            
+            return false;
+        }
+        
+        // Modal Reset Funktion
+        function resetModalState(userId) {
+            const submitBtn = document.getElementById('passwordSubmitBtn' + userId);
+            const passwordInput = document.getElementById('passwordInput' + userId);
+            const statusMessage = document.getElementById('statusMessage' + userId);
+            
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Passwort zurücksetzen';
+                submitBtn.classList.add('btn-warning');
+                submitBtn.classList.remove('btn-secondary');
+            }
+            
+            if (passwordInput) {
+                passwordInput.value = '';
+                passwordInput.classList.remove('is-invalid');
+            }
+            
+            if (statusMessage) {
+                statusMessage.style.display = 'none';
+            }
+        }
+
+        // Smooth transitions to prevent flicker
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔑 PASSWORD MODAL SYSTEM - DOM Content Loaded, initializing anti-flicker');
+            
+            // SOFORTIGES FLICKER-DEBUG
+            window.addEventListener('beforeunload', function() {
+                console.log('🔑 FLICKER DEBUG - Page is being unloaded/refreshed!');
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('[data-bs-toggle="modal"]') || e.target.closest('[data-bs-toggle="modal"]')) {
+                    console.log('🔑 FLICKER DEBUG - Modal trigger clicked:', e.target);
+                }
+            });
+            
+            // Add smooth transition to all forms
+            const forms = document.querySelectorAll('form');
+            console.log('🔑 PASSWORD MODAL SYSTEM - Found', forms.length, 'forms');
+            
+            forms.forEach(form => {
+                form.style.transition = 'all 0.2s ease';
+            });
+            
+            // Prevent double-submit flicker
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    console.log('🔑 PASSWORD MODAL SYSTEM - Form submit detected');
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                        console.log('🔑 PASSWORD MODAL SYSTEM - Submit button disabled to prevent double-submit');
+                    }
+                });
+            });
+            
+            // Anti-Flicker Bootstrap Modal Setup
+            const modals = document.querySelectorAll('.modal');
+            
+            modals.forEach(modal => {
+                // Entferne alle Animationen die Flackern verursachen
+                modal.style.transition = 'none';
+                modal.style.animation = 'none';
+                
+                const modalDialog = modal.querySelector('.modal-dialog');
+                if (modalDialog) {
+                    modalDialog.style.transition = 'none';
+                    modalDialog.style.animation = 'none';
+                }
+                
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.transition = 'none';
+                    modalContent.style.animation = 'none';
+                }
+                
+                // Modal Reset bei jedem Öffnen
+                modal.addEventListener('show.bs.modal', function() {
+                    const modalId = modal.id.replace('resetModal', '');
+                    resetModalState(modalId);
+                });
+                
+                // Verhindere Modal-Close während Submit
+                modal.addEventListener('hide.bs.modal', function(e) {
+                    const submitBtn = modal.querySelector('[type="submit"]');
+                    if (submitBtn && submitBtn.disabled) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            });
+        });
+
+        function restartServer() {
+            if (confirm('Server neu starten? Dies dauert ein paar Sekunden.')) {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Neustart...';
+                
+                fetch('/admin/restart_server', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.success) {
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Fehler beim Server-Neustart');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Server neu starten';
+                });
+            }
+        }
+
+        function clearCache() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Leere Cache...';
+            
+            // Hard refresh to clear cache
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 500);
+            
+            // For modern browsers
+            if ('serviceWorker' in navigator) {
+                caches.keys().then(function(names) {
+                    for (let name of names) caches.delete(name);
+                });
+            }
+        }
+    </script>
+{% endblock %}

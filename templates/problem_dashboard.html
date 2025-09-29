@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}Problem Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-1">🔧 Problem Dashboard</h3>
+                            <p class="mb-0 opacity-75">Zentrale Verwaltung aller Wartungsprobleme</p>
+                        </div>
+                        <div class="text-end">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#newProblemModal">
+                                    <i class="bi bi-plus-circle me-1"></i>Neues Problem
+                                </button>
+                                <button class="btn btn-outline-light btn-sm" onclick="location.reload()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Aktualisieren
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-exclamation-triangle text-danger fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">Gemeldete Probleme</h6>
+                            <h3 class="mb-0 text-danger">{{ problems|selectattr("status", "equalto", "gemeldet")|list|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-tools text-warning fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">In Bearbeitung</h6>
+                            <h3 class="mb-0 text-warning">{{ problems|selectattr("status", "equalto", "in_bearbeitung")|list|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-info bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-clock text-info fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">Wartend</h6>
+                            <h3 class="mb-0 text-info">{{ problems|selectattr("status", "equalto", "wartend_auf_material")|list|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                            <i class="bi bi-check-circle text-success fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0">Gesamt Aktiv</h6>
+                            <h3 class="mb-0 text-success">{{ problems|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="statusFilter" id="status-all" autocomplete="off" checked>
+                                    <label class="btn btn-outline-primary btn-sm" for="status-all">Alle</label>
+                                    
+                                    <input type="radio" class="btn-check" name="statusFilter" id="status-gemeldet" autocomplete="off">
+                                    <label class="btn btn-outline-danger btn-sm" for="status-gemeldet">Gemeldet</label>
+                                    
+                                    <input type="radio" class="btn-check" name="statusFilter" id="status-bearbeitung" autocomplete="off">
+                                    <label class="btn btn-outline-warning btn-sm" for="status-bearbeitung">In Bearbeitung</label>
+                                    
+                                    <input type="radio" class="btn-check" name="statusFilter" id="status-wartend" autocomplete="off">
+                                    <label class="btn btn-outline-info btn-sm" for="status-wartend">Wartend</label>
+                                </div>
+                                
+                                <select class="form-select form-select-sm" id="bohrturmFilter" style="width: auto;">
+                                    <option value="">Alle Anlagen</option>
+                                    <option value="T-700">T-700</option>
+                                    <option value="T-46">T-46</option>
+                                    <option value="T-208">T-208</option>
+                                    <option value="T-207">T-207</option>
+                                </select>
+                                
+                                <select class="form-select form-select-sm" id="abteilungFilter" style="width: auto;">
+                                    <option value="">Alle Abteilungen</option>
+                                    <option value="EL">Elektrik</option>
+                                    <option value="HY">Hydraulik</option>
+                                    <option value="ME">Mechanik</option>
+                                    <option value="PL">Pneumatik</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 text-end">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Problem suchen...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problems Grid -->
+    <div class="row" id="problemsContainer">
+        {% for problem in problems %}
+        <div class="col-xl-4 col-lg-6 mb-4 problem-card" 
+             data-status="{{ problem.status }}" 
+             data-bohrturm="{{ problem.bohrturm }}" 
+             data-abteilung="{{ problem.abteilung }}"
+             data-search="{{ problem.problem|lower }} {{ problem.bohrturm|lower }} {{ problem.system|lower }}">
+            
+            <div class="card h-100 border-0 shadow-sm problem-item">
+                <!-- Problem Header -->
+                <div class="card-header border-0 pb-0" style="
+                    background: {% if problem.status == 'gemeldet' %}linear-gradient(135deg, #ffebee, #ffcdd2){% elif problem.status == 'in_bearbeitung' %}linear-gradient(135deg, #fff8e1, #ffecb3){% elif problem.status == 'wartend_auf_material' %}linear-gradient(135deg, #e3f2fd, #bbdefb){% else %}linear-gradient(135deg, #f3e5f5, #e1bee7){% endif %};
+                ">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge {% if problem.status == 'gemeldet' %}bg-danger{% elif problem.status == 'in_bearbeitung' %}bg-warning{% elif problem.status == 'wartend_auf_material' %}bg-info{% else %}bg-secondary{% endif %} me-2">
+                                    {{ problem.status|replace('_', ' ')|title }}
+                                </span>
+                                <small class="text-muted">#{{ problem.id }}</small>
+                            </div>
+                            <h6 class="mb-1 text-dark">{{ problem.bohrturm }} - {{ problem.system }}</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>{{ problem.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            </small>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="expandProblem({{ problem.id }})">
+                                    <i class="bi bi-eye me-2"></i>Details anzeigen
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="editProblem({{ problem.id }})">
+                                    <i class="bi bi-pencil me-2"></i>Bearbeiten
+                                </a></li>
+                                {% if is_admin %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="deleteProblem({{ problem.id }})">
+                                    <i class="bi bi-trash me-2"></i>Löschen
+                                </a></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Problem Body -->
+                <div class="card-body">
+                    <p class="text-dark mb-3">{{ problem.problem[:100] }}{% if problem.problem|length > 100 %}...{% endif %}</p>
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="text-muted small">Abteilung</div>
+                                <strong>{{ problem.abteilung }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="text-muted small">Zuständig</div>
+                                <strong>{{ problem.verantwortlicher or 'Nicht zugewiesen' }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-muted small">Priorität</div>
+                            <strong class="text-{{ 'danger' if problem.status == 'gemeldet' else 'warning' if problem.status == 'in_bearbeitung' else 'info' }}">
+                                {% if problem.status == 'gemeldet' %}Hoch{% elif problem.status == 'in_bearbeitung' %}Mittel{% else %}Normal{% endif %}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="d-flex gap-2 mt-auto">
+                        {% if problem.status == 'gemeldet' %}
+                        <button class="btn btn-warning btn-sm flex-fill" onclick="takeProblem({{ problem.id }})">
+                            <i class="bi bi-person-check me-1"></i>Übernehmen
+                        </button>
+                        {% elif problem.status == 'in_bearbeitung' %}
+                        <button class="btn btn-success btn-sm flex-fill" onclick="completeProblem({{ problem.id }})">
+                            <i class="bi bi-check-circle me-1"></i>Abgeschlossen
+                        </button>
+                        {% elif problem.status == 'wartend_auf_material' %}
+                        <button class="btn btn-info btn-sm flex-fill" onclick="continueProblem({{ problem.id }})">
+                            <i class="bi bi-play-circle me-1"></i>Fortsetzen
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-outline-primary btn-sm" onclick="showProblemDetails({{ problem.id }})">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Expandable Details (Hidden by default) -->
+                <div class="collapse" id="details-{{ problem.id }}">
+                    <div class="card-footer bg-light">
+                        <div class="row">
+                            <div class="col-12">
+                                <h6>Vollständige Beschreibung:</h6>
+                                <p class="mb-2">{{ problem.problem }}</p>
+                                
+                                {% if problem.massnahmen %}
+                                <h6>Geplante Maßnahmen:</h6>
+                                <p class="mb-2">{{ problem.massnahmen }}</p>
+                                {% endif %}
+                                
+                                {% if problem.image_list %}
+                                <h6>Bilder:</h6>
+                                <div class="d-flex gap-2">
+                                    {% for image in problem.image_list %}
+                                    <img src="{{ url_for('static', filename='uploads/' + image) }}" 
+                                         class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;"
+                                         onclick="showImageModal('{{ url_for('static', filename='uploads/' + image) }}')">
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- New Problem Modal -->
+<div class="modal fade" id="newProblemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Neues Problem melden
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="newProblemForm" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Bohrturm/Anlage *</label>
+                                <select class="form-select" name="bohrturm" required>
+                                    <option value="">Bitte wählen...</option>
+                                    <option value="T-700">T-700</option>
+                                    <option value="T-46">T-46</option>
+                                    <option value="T-208">T-208</option>
+                                    <option value="T-207">T-207</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Abteilung *</label>
+                                <select class="form-select" name="abteilung" required>
+                                    <option value="">Bitte wählen...</option>
+                                    <option value="EL">Elektrik</option>
+                                    <option value="HY">Hydraulik</option>
+                                    <option value="ME">Mechanik</option>
+                                    <option value="PL">Pneumatik</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">System/Komponente *</label>
+                        <input type="text" class="form-control" name="system" required 
+                               placeholder="z.B. Haupthydraulik, Rotary Table, etc.">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Problembeschreibung *</label>
+                        <textarea class="form-control" name="problem" rows="4" required
+                                  placeholder="Beschreiben Sie das Problem so detailliert wie möglich..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Zuweisen an</label>
+                        <select class="form-select" name="assigned_to">
+                            <option value="">Nicht zuweisen</option>
+                            {% for user in all_users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Bilder hinzufügen</label>
+                        <input type="file" class="form-control" name="problem_images" multiple accept="image/*">
+                        <div class="form-text">Mehrere Bilder auswählen möglich (JPG, PNG)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check me-1"></i>Problem melden
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+// Auto-refresh every 60 seconds
+setInterval(function() {
+    location.reload();
+}, 60000);
+
+// Filter functions
+document.addEventListener('DOMContentLoaded', function() {
+    const statusFilters = document.querySelectorAll('input[name="statusFilter"]');
+    const bohrturmFilter = document.getElementById('bohrturmFilter');
+    const abteilungFilter = document.getElementById('abteilungFilter');
+    const searchInput = document.getElementById('searchInput');
+    
+    function filterProblems() {
+        const selectedStatus = document.querySelector('input[name="statusFilter"]:checked').id.replace('status-', '');
+        const selectedBohrturm = bohrturmFilter.value;
+        const selectedAbteilung = abteilungFilter.value;
+        const searchTerm = searchInput.value.toLowerCase();
+        
+        document.querySelectorAll('.problem-card').forEach(card => {
+            let visible = true;
+            
+            // Status filter
+            if (selectedStatus !== 'all') {
+                const cardStatus = card.dataset.status;
+                if (selectedStatus === 'bearbeitung' && cardStatus !== 'in_bearbeitung') visible = false;
+                if (selectedStatus === 'wartend' && cardStatus !== 'wartend_auf_material') visible = false;
+                if (selectedStatus === 'gemeldet' && cardStatus !== 'gemeldet') visible = false;
+            }
+            
+            // Bohrturm filter
+            if (selectedBohrturm && card.dataset.bohrturm !== selectedBohrturm) visible = false;
+            
+            // Abteilung filter
+            if (selectedAbteilung && card.dataset.abteilung !== selectedAbteilung) visible = false;
+            
+            // Search filter
+            if (searchTerm && !card.dataset.search.includes(searchTerm)) visible = false;
+            
+            card.style.display = visible ? 'block' : 'none';
+        });
+    }
+    
+    statusFilters.forEach(filter => filter.addEventListener('change', filterProblems));
+    bohrturmFilter.addEventListener('change', filterProblems);
+    abteilungFilter.addEventListener('change', filterProblems);
+    searchInput.addEventListener('input', filterProblems);
+});
+
+// Problem actions
+function takeProblem(problemId) {
+    if (confirm('Möchten Sie dieses Problem übernehmen?')) {
+        fetch(`/api/take_problem/${problemId}`, {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Fehler: ' + data.message);
+                }
+            });
+    }
+}
+
+function completeProblem(problemId) {
+    if (confirm('Problem als abgeschlossen markieren?')) {
+        fetch(`/api/complete_problem/${problemId}`, {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Fehler: ' + data.message);
+                }
+            });
+    }
+}
+
+function showProblemDetails(problemId) {
+    const details = document.getElementById(`details-${problemId}`);
+    const collapse = new bootstrap.Collapse(details);
+    collapse.toggle();
+}
+
+// New problem form
+document.getElementById('newProblemForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('/api/new_problem', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Fehler: ' + data.message);
+        }
+    });
+});
+</script>
+
+{% endblock %}

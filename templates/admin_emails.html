@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Admin: Email-Bot Übersicht{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <!-- Header Card -->
+        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="card-body p-4 text-center">
+                <div class="d-inline-block bg-white rounded-circle p-3 mb-3">
+                    <i class="bi bi-envelope-fill text-warning fs-3"></i>
+                </div>
+                <h1 class="card-title fw-semibold text-white mb-1">📧 Email-Bot Übersicht</h1>
+                <p class="text-white mb-0 opacity-75">Alle lokal gespeicherten Email-Benachrichtigungen</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom">
+                <ul class="nav nav-tabs card-header-tabs" id="adminTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="{{ url_for('admin_users') }}">
+                            <i class="bi bi-people-fill me-2"></i>Benutzerverwaltung
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" href="{{ url_for('admin_emails') }}">
+                            <i class="bi bi-envelope-fill me-2"></i>Email-Bot
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Email Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-warning mb-2">
+                            <i class="bi bi-envelope-fill fs-2"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark">{{ emails|length }}</h3>
+                        <p class="text-muted mb-0">Gesamt Emails</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-success mb-2">
+                            <i class="bi bi-check-circle-fill fs-2"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark">{{ emails|selectattr('email_type', 'equalto', 'material_order')|list|length }}</h3>
+                        <p class="text-muted mb-0">Material-Bestellungen</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-info mb-2">
+                            <i class="bi bi-robot fs-2"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark">v1.0</h3>
+                        <p class="text-muted mb-0">Email-Bot Version</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-secondary mb-2">
+                            <i class="bi bi-database-fill fs-2"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark">Local</h3>
+                        <p class="text-muted mb-0">Speicherung</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email List -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-list-ul me-2 text-muted"></i>Email-Verlauf
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if emails %}
+                    {% for email in emails %}
+                    <div class="border-bottom p-3 {{ 'bg-light' if loop.index0 % 2 == 0 else '' }}">
+                        <div class="row align-items-center">
+                            <!-- Empfänger Info -->
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary rounded-circle p-2 me-3">
+                                        <i class="bi bi-person-fill text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold">{{ email.recipient_name }}</h6>
+                                        <small class="text-muted text-truncate d-block" style="max-width: 180px;">
+                                            <i class="bi bi-envelope me-1"></i>{{ email.recipient }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Subject & Type -->
+                            <div class="col-md-4">
+                                <h6 class="mb-1 fw-semibold">{{ email.subject[:45] }}{% if email.subject|length > 45 %}...{% endif %}</h6>
+                                <div>
+                                    {% if email.email_type == 'material_order' %}
+                                        <span class="badge bg-warning">🛒 Material-Bestellung</span>
+                                    {% elif email.email_type == 'problem_assignment' %}
+                                        <span class="badge bg-info">📋 Problem-Zuweisung</span>
+                                    {% elif email.email_type == 'problem_completion' %}
+                                        <span class="badge bg-success">✅ Problem abgearbeitet</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ email.email_type }}</span>
+                                    {% endif %}
+                                    {% if email.problem_id %}
+                                        <span class="badge bg-light text-dark">Problem #{{ email.problem_id }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Timestamp -->
+                            <div class="col-md-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>
+                                    {{ email.timestamp|replace('T', ' ')|replace('.', ' ')|truncate(19) }}
+                                </small>
+                                <br>
+                                <small class="text-success">
+                                    <i class="bi bi-check-circle me-1"></i>{{ email.status }}
+                                </small>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="col-md-2 text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('admin_email_preview', filename=email.filename.replace('.json', '.html')) }}" 
+                                       class="btn btn-outline-primary" 
+                                       target="_blank" 
+                                       title="Email-Vorschau">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button class="btn btn-outline-secondary" 
+                                            onclick="navigator.clipboard.writeText('{{ email.recipient }}'); alert('Email-Adresse kopiert!');" 
+                                            title="Email-Adresse kopieren">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" 
+                                            onclick="deleteEmail('{{ email.filename }}')" 
+                                            title="Email löschen">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-5 text-center">
+                        <div class="text-muted mb-3">
+                            <i class="bi bi-inbox fs-1"></i>
+                        </div>
+                        <h5 class="text-muted">Noch keine Emails versendet</h5>
+                        <p class="text-muted">Der Email-Bot wird hier alle versendeten Nachrichten protokollieren.</p>
+                        <a href="{{ url_for('problems') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Problem melden
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if emails %}
+        <!-- Email-Bot Info -->
+        <div class="card border-0 shadow-sm mt-4" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-1 text-center">
+                        <i class="bi bi-robot fs-2 text-warning"></i>
+                    </div>
+                    <div class="col-md-8">
+                        <h5 class="fw-semibold text-dark mb-1">🤖 Email-Bot Status</h5>
+                        <p class="text-muted mb-0">
+                            Alle Emails werden lokal in <code>logs/emails/</code> gespeichert. 
+                            Der Email-Bot ersetzt die Google Mail-Abhängigkeit und kann später 
+                            einfach auf echten Email-Versand umgestellt werden.
+                        </p>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            <i class="bi bi-check-circle me-1"></i>Aktiv
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- JavaScript für Email-Löschen -->
+    <script>
+    function deleteEmail(filename) {
+        if (confirm('Sind Sie sicher, dass Sie diese Email löschen möchten?\n\nDatei: ' + filename)) {
+            fetch('/admin/delete_email/' + encodeURIComponent(filename), {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Email erfolgreich gelöscht!');
+                    location.reload(); // Seite neu laden
+                } else {
+                    alert('Fehler beim Löschen: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Fehler beim Löschen der Email');
+            });
+        }
+    }
+    </script>
+{% endblock %}

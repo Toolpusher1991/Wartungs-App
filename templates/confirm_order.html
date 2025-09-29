@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Material-Bestellung bestätigen{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <!-- Header Card -->
+        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="card-body p-4 text-center text-white">
+                <div class="d-inline-block bg-white rounded-circle p-3 mb-3">
+                    <i class="bi bi-cart-check text-warning fs-3"></i>
+                </div>
+                <h1 class="card-title fw-semibold mb-1">Material-Bestellung bestätigen</h1>
+                <p class="mb-0 opacity-90">Bestätigen Sie die Bestellung und geben Sie die PR-Nummer ein</p>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Problem Details Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-info-circle-fill me-2 text-muted"></i>Problem Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-gear-fill me-2 text-primary"></i>
+                                    <span class="fw-semibold">Anlage:</span>
+                                </div>
+                                <span class="badge bg-primary">{{ problem.bohrturm }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-building me-2 text-success"></i>
+                                    <span class="fw-semibold">Abteilung:</span>
+                                </div>
+                                <span class="badge bg-success">{{ problem.abteilung }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-tools me-2 text-secondary"></i>
+                                    <span class="fw-semibold">System:</span>
+                                </div>
+                                <span class="text-dark">{{ problem.system }}</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="bi bi-exclamation-triangle me-2 text-warning mt-1"></i>
+                            <div>
+                                <span class="fw-semibold">Problembeschreibung:</span>
+                                <p class="mb-0 mt-1">{{ problem.problem }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Bearbeiter Info -->
+                        <div class="alert alert-info border-0 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-gear me-2 text-primary"></i>
+                                <div>
+                                    <strong>Bearbeiter:</strong>
+                                    {% if problem.assigned_user %}
+                                        <span class="text-primary fw-semibold">{{ problem.assigned_user.username }}</span>
+                                    {% elif problem.verantwortlicher %}
+                                        <span class="text-primary fw-semibold">{{ problem.verantwortlicher }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Nicht zugewiesen</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Material-Bestellung Details Card -->
+                <div class="card border-warning shadow-sm mb-4">
+                    <div class="card-header bg-warning bg-opacity-10 border-bottom border-warning">
+                        <h5 class="mb-0 fw-semibold text-warning">
+                            <i class="bi bi-cart-plus me-2"></i>Material-Bestellung Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if problem.mm_nummer %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-upc-scan me-2 text-warning"></i>
+                                <span class="fw-semibold">MM-Nummer:</span>
+                            </div>
+                            <div class="mt-1">
+                                <span class="badge bg-warning text-dark fs-6">{{ problem.mm_nummer }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if problem.teil_beschreibung %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-tag me-2 text-warning"></i>
+                                <span class="fw-semibold">Teil-Beschreibung:</span>
+                            </div>
+                            <div class="bg-light p-3 rounded mt-1">{{ problem.teil_beschreibung }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if problem.massnahmen %}
+                        <div class="mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-list-check me-2 text-warning"></i>
+                                <span class="fw-semibold">Geplante Maßnahmen:</span>
+                            </div>
+                            <div class="bg-light p-3 rounded mt-1">{{ problem.massnahmen }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Bestellbestätigung Form -->
+                {% if problem.bestellung_bestaetigt %}
+                    <!-- Bereits bestätigt -->
+                    <div class="card border-success shadow-sm">
+                        <div class="card-header bg-success bg-opacity-10 border-bottom border-success">
+                            <h5 class="mb-0 fw-semibold text-success">
+                                <i class="bi bi-check-circle me-2"></i>Bestellung bereits bestätigt
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if problem.pr_nummer %}
+                            <div class="mb-3">
+                                <strong class="text-success">PR-Nummer:</strong>
+                                <span class="badge bg-success ms-2">{{ problem.pr_nummer }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if problem.lieferdatum %}
+                            <div class="mb-3">
+                                <strong class="text-success">Lieferdatum:</strong>
+                                <span class="text-success ms-2">{{ problem.lieferdatum.strftime('%d.%m.%Y') }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-0">
+                                <strong class="text-success">Bestätigt am:</strong>
+                                <span class="text-success ms-2">{{ problem.bestellung_bestaetigt_am.strftime('%d.%m.%Y %H:%M') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Bestätigungsformular -->
+                    <div class="card border-warning shadow-sm">
+                        <div class="card-header bg-warning bg-opacity-10 border-bottom border-warning">
+                            <h5 class="mb-0 fw-semibold text-warning">
+                                <i class="bi bi-clipboard-check me-2"></i>Bestellung bestätigen
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                <div class="mb-4">
+                                    <label for="pr_nummer" class="form-label fw-semibold">
+                                        <i class="bi bi-hash me-1"></i>PR-Nummer *
+                                    </label>
+                                    <input type="text" id="pr_nummer" name="pr_nummer" class="form-control" 
+                                           placeholder="PR-Nummer eingeben (z.B. PR-2025-12345)" required
+                                           value="{{ problem.pr_nummer or '' }}">
+                                    <div class="form-text">Bitte geben Sie die PR-Nummer aus Ihrem Bestellsystem ein.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="lieferdatum" class="form-label fw-semibold">
+                                        <i class="bi bi-calendar-event me-1"></i>Voraussichtliches Lieferdatum
+                                    </label>
+                                    <input type="date" id="lieferdatum" name="lieferdatum" class="form-control"
+                                           value="{{ problem.lieferdatum.strftime('%Y-%m-%d') if problem.lieferdatum else '' }}">
+                                    <div class="form-text">Optional: Wann wird das Material voraussichtlich geliefert?</div>
+                                </div>
+
+                                <div class="alert alert-warning border-0 mb-4">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-exclamation-triangle me-2 text-warning mt-1"></i>
+                                        <div>
+                                            <strong>Wichtiger Hinweis:</strong>
+                                            <p class="mb-0 mt-1">Mit der Bestätigung erklären Sie, dass Sie die Material-Bestellung ausgelöst haben. Diese Aktion kann nicht rückgängig gemacht werden.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="submit" class="btn btn-warning px-4">
+                                        <i class="bi bi-check-lg me-2"></i>Bestellung bestätigen
+                                    </button>
+                                    <a href="{{ url_for('problems') }}" class="btn btn-outline-secondary px-4">
+                                        <i class="bi bi-arrow-left me-2"></i>Zurück
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

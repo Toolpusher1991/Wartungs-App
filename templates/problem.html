@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Problem melden{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header Card -->
+                <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <div class="card-body p-4 text-center">
+                        <div class="d-inline-block bg-white rounded-circle p-3 mb-3">
+                            <i class="bi bi-plus-circle-fill text-primary fs-3"></i>
+                        </div>
+                        <h1 class="card-title fw-semibold text-dark mb-1">Problem melden</h1>
+                        <p class="text-muted mb-0">Erfassen Sie ein neues Wartungsproblem</p>
+                    </div>
+                </div>
+
+                <!-- Problem Form -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data">
+                            <!-- Anlage Selection -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-gear text-muted me-2"></i>
+                                    <h6 class="mb-0 fw-semibold text-dark">Anlage auswählen</h6>
+                                </div>
+                                
+                                {% if is_admin %}
+                                    <!-- Admin kann alle Anlagen wählen -->
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-3">
+                                            <input type="radio" class="btn-check" name="bohrturm" id="t700" value="T-700" required>
+                                            <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="t700">
+                                                T-700
+                                            </label>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <input type="radio" class="btn-check" name="bohrturm" id="t46" value="T-46" required>
+                                            <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="t46">
+                                                T-46
+                                            </label>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <input type="radio" class="btn-check" name="bohrturm" id="t208" value="T-208" required>
+                                            <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="t208">
+                                                T-208
+                                            </label>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <input type="radio" class="btn-check" name="bohrturm" id="t207" value="T-207" required>
+                                            <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="t207">
+                                                T-207
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% elif user_facility %}
+                                    <!-- Facility-User sieht nur seine Anlage -->
+                                    <div class="alert alert-info" role="alert">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Sie können nur Probleme für <strong>{{ user_facility }}</strong> melden.
+                                    </div>
+                                    <input type="hidden" name="bohrturm" value="{{ user_facility }}">
+                                    <div class="card bg-primary bg-opacity-10 border-primary">
+                                        <div class="card-body text-center py-3">
+                                            <h5 class="text-primary mb-0">{{ user_facility }}</h5>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <!-- Fallback: Alle Anlagen für unbekannte User -->
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-3">
+                                            <input type="radio" class="btn-check" name="bohrturm" id="t700" value="T-700" required>
+                                            <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="t700">
+                                                T-700
+                                            </label>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <input type="radio" class="btn-check" name="bohrturm" id="t46" value="T-46" required>
+                                            <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="t46">
+                                                T-46
+                                            </label>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <input type="radio" class="btn-check" name="bohrturm" id="t208" value="T-208" required>
+                                            <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="t208">
+                                                T-208
+                                            </label>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <input type="radio" class="btn-check" name="bohrturm" id="t207" value="T-207" required>
+                                            <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="t207">
+                                                T-207
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Abteilung Selection -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-people text-muted me-2"></i>
+                                    <h6 class="mb-0 fw-semibold text-dark">Abteilung auswählen</h6>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <input type="radio" class="btn-check" name="abteilung" id="elektrisch" value="Elektrisch" required>
+                                        <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="elektrisch">
+                                            Elektrisch
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" class="btn-check" name="abteilung" id="mechanisch" value="Mechanisch" required>
+                                        <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="mechanisch">
+                                            Mechanisch
+                                        </label>
+                                    </div>
+                                    <div class="col-4">
+                                        <input type="radio" class="btn-check" name="abteilung" id="anlage" value="Anlage" required>
+                                        <label class="btn btn-outline-secondary w-100 py-2 fw-semibold" for="anlage">
+                                            Anlage
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- System Input -->
+                            <div class="mb-4">
+                                <label for="system" class="form-label fw-semibold text-dark">
+                                    <i class="bi bi-cpu text-muted me-2"></i>System/Komponente
+                                </label>
+                                <input type="text" id="system" name="system" class="form-control" 
+                                       placeholder="z.B. Hydraulik, Steuerung, Motor..." required>
+                                <small class="form-text text-muted">Geben Sie das betroffene System oder die Komponente an</small>
+                            </div>
+
+                            <!-- Problem Description -->
+                            <div class="mb-4">
+                                <label for="problem" class="form-label fw-semibold text-dark">
+                                    <i class="bi bi-exclamation-triangle text-muted me-2"></i>Problembeschreibung
+                                </label>
+                                <textarea id="problem" name="problem" class="form-control" rows="3" 
+                                          placeholder="Beschreiben Sie das Problem detailliert..." required></textarea>
+                                <small class="form-text text-muted">Beschreiben Sie das Problem so detailliert wie möglich</small>
+                            </div>
+
+                            <!-- Automatische Zuweisung Info -->
+                            <div class="mb-4">
+                                <div class="alert alert-info d-flex align-items-center">
+                                    <i class="bi bi-person-check-fill fs-5 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1 fw-semibold">Automatische Zuweisung</h6>
+                                        <small class="mb-0">
+                                            Der Verantwortliche wird automatisch basierend auf der gewählten Anlage und Abteilung zugewiesen:
+                                            <br><strong>Elektrisch</strong> → EL-Fachkraft | <strong>Mechanisch</strong> → MECH-Fachkraft | <strong>Anlage</strong> → Toolpusher
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Image Upload Section -->
+                            <div class="mb-4">
+                                <div class="card bg-light border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i class="bi bi-camera text-muted me-2"></i>
+                                            <h6 class="mb-0 fw-semibold text-dark">Bilder hinzufügen (optional)</h6>
+                                        </div>
+                                        <div class="mb-3">
+                                            <input type="file" id="problem_images" name="problem_images" 
+                                                   class="form-control" accept="image/*" multiple>
+                                            <small class="form-text text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Sie können mehrere Bilder auswählen (JPG, PNG, GIF). Max. 5MB pro Bild.
+                                            </small>
+                                        </div>
+                                        <div class="row g-2" id="image-preview-container" style="display: none;">
+                                            <div class="col-12">
+                                                <div class="alert alert-info alert-sm mb-0">
+                                                    <i class="bi bi-images me-1"></i>
+                                                    <span id="image-count">0</span> Bild(er) ausgewählt
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{{ url_for('problems') }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i>Zurück
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>Problem melden
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript für Bildauswahl-Feedback
+        document.getElementById('problem_images').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const previewContainer = document.getElementById('image-preview-container');
+            const imageCount = document.getElementById('image-count');
+            
+            if (files.length > 0) {
+                previewContainer.style.display = 'block';
+                imageCount.textContent = files.length;
+                
+                // Dateigröße-Validierung (5MB pro Datei)
+                let validFiles = 0;
+                for (let i = 0; i < files.length; i++) {
+                    if (files[i].size <= 5 * 1024 * 1024) {
+                        validFiles++;
+                    }
+                }
+                
+                if (validFiles !== files.length) {
+                    alert(`Achtung: ${files.length - validFiles} Datei(en) sind größer als 5MB und werden ignoriert.`);
+                }
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    </script>
+{% endblock %}

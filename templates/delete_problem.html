@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Problem abschließen{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <!-- Header Card -->
+        <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+            <div class="card-body p-4 text-center">
+                <div class="d-inline-block bg-white rounded-circle p-3 mb-3">
+                    {% if is_admin and problem.status == 'abgearbeitet' %}
+                        <i class="bi bi-check-circle text-danger fs-3"></i>
+                    {% else %}
+                        <i class="bi bi-check2-square text-success fs-3"></i>
+                    {% endif %}
+                </div>
+                <h1 class="card-title fw-semibold text-dark mb-1">
+                    {% if is_admin and problem.status == 'abgearbeitet' %}
+                        Problemlösung bestätigen
+                    {% else %}
+                        Geprüft und abschließen
+                    {% endif %}
+                </h1>
+                <p class="text-muted mb-0">
+                    {% if is_admin and problem.status == 'abgearbeitet' %}
+                        Bestätigen Sie die Problemlösung für die Historie
+                    {% else %}
+                        Schließen Sie das Problem mit einem Kommentar ab
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Problem Details Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-info-circle-fill me-2 text-muted"></i>Problem Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-gear-fill me-2 text-primary"></i>
+                                    <span class="fw-semibold">Anlage:</span>
+                                </div>
+                                <span class="badge bg-primary">{{ problem.bohrturm }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-building me-2 text-success"></i>
+                                    <span class="fw-semibold">Abteilung:</span>
+                                </div>
+                                <span class="badge bg-success">{{ problem.abteilung }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-tools me-2 text-secondary"></i>
+                                    <span class="fw-semibold">System:</span>
+                                </div>
+                                <span class="text-dark">{{ problem.system }}</span>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-3">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="bi bi-exclamation-triangle me-2 text-warning mt-1"></i>
+                                <div>
+                                    <span class="fw-semibold">Problembeschreibung:</span>
+                                    <p class="mb-0 mt-1">{{ problem.problem }}</p>
+                                </div>
+                            </div>
+
+                            {% if problem.massnahmen %}
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="bi bi-list-check me-2 text-info mt-1"></i>
+                                <div>
+                                    <span class="fw-semibold">Durchgeführte Maßnahmen:</span>
+                                    <p class="mb-0 mt-1">{{ problem.massnahmen }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if problem.verantwortlicher %}
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-person-check me-2 text-secondary"></i>
+                                <span class="fw-semibold">Verantwortlicher:</span>
+                                <span class="ms-2">{{ problem.verantwortlicher }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if problem.bestellung_benoetigt %}
+                            <div class="card bg-warning bg-opacity-10 border-warning">
+                                <div class="card-body py-2">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-cart-plus me-2 text-warning"></i>
+                                        <span class="fw-semibold">Materialbestellung notwendig</span>
+                                    </div>
+                                    {% if problem.material_liste %}
+                                    <div class="mb-2">
+                                        <small class="fw-semibold">Materialliste:</small>
+                                        <p class="mb-0 small">{{ problem.material_liste }}</p>
+                                    </div>
+                                    {% endif %}
+                                    {% if problem.pr_nummer %}
+                                    <div>
+                                        <small class="fw-semibold">PR-Nummer:</small>
+                                        <span class="small">{{ problem.pr_nummer }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Card -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-semibold">
+                            {% if is_admin and problem.status == 'abgearbeitet' %}
+                                <i class="bi bi-shield-check me-2 text-muted"></i>Admin-Bestätigung
+                            {% else %}
+                                <i class="bi bi-chat-left-text me-2 text-muted"></i>Abschlusskommentar
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% if is_admin and problem.status == 'abgearbeitet' %}
+                                <div class="alert alert-warning border-0">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                        <div>
+                                            <h6 class="alert-heading mb-1">Bestätigung der Problemlösung</h6>
+                                            <p class="mb-0">Das Problem wird bestätigt und bleibt in der Historie verfügbar.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="submit" class="btn btn-success px-4">
+                                        <i class="bi bi-check-circle me-2"></i>Problemlösung bestätigen
+                                    </button>
+                                    <a href="{{ url_for('problems') }}" class="btn btn-outline-secondary px-4">
+                                        <i class="bi bi-arrow-left me-2"></i>Zurück
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="mb-4">
+                                    <label for="kommentar" class="form-label fw-semibold">
+                                        <i class="bi bi-chat-square-text me-1"></i>Abschließender Kommentar zur Problemlösung *
+                                    </label>
+                                    <textarea id="kommentar" name="kommentar" class="form-control" rows="4" 
+                                              placeholder="Beschreiben Sie, wie das Problem gelöst wurde..." required></textarea>
+                                </div>
+
+                                <!-- Bild-Upload für Fertigstellungsfotos -->
+                                <div class="mb-4">
+                                    <label for="completion_images" class="form-label fw-semibold">
+                                        <i class="bi bi-camera me-1"></i>Fertigstellungsfotos (optional)
+                                    </label>
+                                    <input type="file" class="form-control" id="completion_images" name="completion_images" 
+                                           multiple accept="image/*" onchange="previewCompletionImages(this)">
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Fügen Sie Fotos der durchgeführten Arbeiten hinzu. Unterstützte Formate: JPG, PNG, GIF. Max. 16MB pro Datei.
+                                    </div>
+                                    <!-- Bildvorschau Container -->
+                                    <div id="completion-image-preview" class="row mt-3"></div>
+                                </div>
+                                
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="submit" class="btn btn-success px-4">
+                                        <i class="bi bi-check-circle me-2"></i>Geprüft und abschließen
+                                    </button>
+                                    <a href="{{ url_for('problems') }}" class="btn btn-outline-secondary px-4">
+                                        <i class="bi bi-arrow-left me-2"></i>Zurück
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function previewCompletionImages(input) {
+            const previewContainer = document.getElementById('completion-image-preview');
+            previewContainer.innerHTML = '';
+            
+            if (input.files && input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const col = document.createElement('div');
+                            col.className = 'col-md-3 col-sm-4 col-6 mb-3';
+                            col.innerHTML = `
+                                <div class="card border-0 shadow-sm">
+                                    <img src="${e.target.result}" class="card-img-top" style="height: 120px; object-fit: cover;">
+                                    <div class="card-body p-2">
+                                        <small class="text-muted text-truncate d-block">${file.name}</small>
+                                        <small class="text-muted">${(file.size / 1024 / 1024).toFixed(1)} MB</small>
+                                    </div>
+                                </div>
+                            `;
+                            previewContainer.appendChild(col);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+    </script>
+{% endblock %}

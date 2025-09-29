@@ -1,0 +1,6 @@
+@echo off
+echo Initialisiere Datenbank...
+python init_db.py
+echo.
+echo Starte Wartungs-App...
+python app.py

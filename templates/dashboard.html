@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-header text-center">
+                <h1 class="display-4 fw-bold text-primary mb-2">
+                    <i class="bi bi-speedometer2 me-3"></i>Wartungs-Dashboard
+                </h1>
+                <p class="lead text-muted">Übersicht aller Probleme und Statistiken</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistik-Karten -->
+    <div class="row mb-4">
+        <!-- Gesamt-Probleme -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card card-primary h-100">
+                <div class="stat-icon">
+                    <i class="bi bi-list-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ total_problems }}</h3>
+                    <p class="stat-label">Gesamt Probleme</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gemeldete Probleme -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card card-secondary h-100">
+                <div class="stat-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ gemeldet_count }}</h3>
+                    <p class="stat-label">Gemeldet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- In Bearbeitung -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card card-info h-100">
+                <div class="stat-icon">
+                    <i class="bi bi-gear"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ in_bearbeitung_count }}</h3>
+                    <p class="stat-label">In Bearbeitung</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Abgearbeitet -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card card-success h-100">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ abgearbeitet_count }}</h3>
+                    <p class="stat-label">Abgearbeitet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zweite Statistik-Reihe -->
+    <div class="row mb-4">
+        <!-- Kritische Probleme -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card card-danger h-100">
+                <div class="stat-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ critical_problems }}</h3>
+                    <p class="stat-label">Kritisch (>24h)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Probleme mit Bildern -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card card-purple h-100">
+                <div class="stat-icon">
+                    <i class="bi bi-camera"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ problems_with_images }}</h3>
+                    <p class="stat-label">Mit Bildern</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bearbeitungsrate -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card card-teal h-100">
+                <div class="stat-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">
+                        {% if total_problems > 0 %}
+                            {{ "%.0f"|format((abgearbeitet_count / total_problems) * 100) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </h3>
+                    <p class="stat-label">Bearbeitungsrate</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Offene Probleme -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card card-orange h-100">
+                <div class="stat-icon">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ gemeldet_count + in_bearbeitung_count }}</h3>
+                    <p class="stat-label">Offen</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagramme und Details -->
+    <div class="row mb-4">
+        <!-- Abteilungen -->
+        <div class="col-lg-6 mb-4">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-building me-2"></i>Probleme nach Abteilungen
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if abteilungen %}
+                        <div class="progress-list">
+                            {% for abt in abteilungen %}
+                            <div class="progress-item mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-semibold">{{ abt.abteilung or 'Unbekannt' }}</span>
+                                    <span class="badge bg-primary">{{ abt.count }}</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-gradient" 
+                                         style="width: {{ (abt.count / total_problems * 100) if total_problems > 0 else 0 }}%">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Keine Daten verfügbar</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bohrtürme -->
+        <div class="col-lg-6 mb-4">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-gear-wide me-2"></i>Probleme nach Bohrtürmen
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if bohrtuerme %}
+                        <div class="progress-list">
+                            {% for bt in bohrtuerme %}
+                            <div class="progress-item mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-semibold">{{ bt.bohrturm or 'Unbekannt' }}</span>
+                                    <span class="badge bg-success">{{ bt.count }}</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success bg-gradient" 
+                                         style="width: {{ (bt.count / total_problems * 100) if total_problems > 0 else 0 }}%">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Keine Daten verfügbar</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Letzte Probleme -->
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Neueste Probleme
+                    </h5>
+                    <a href="{{ url_for('problems') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i>Alle anzeigen
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_problems %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Beschreibung</th>
+                                        <th>Status</th>
+                                        <th>Abteilung</th>
+                                        <th>Bohrturm</th>
+                                        <th>Gemeldet</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for problem in recent_problems %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary">#{{ problem.id }}</span>
+                                        </td>
+                                        <td>{{ problem.problem[:50] }}{% if problem.problem|length > 50 %}...{% endif %}</td>
+                                        <td>
+                                            {% if problem.status == 'gemeldet' %}
+                                                <span class="badge bg-warning">Gemeldet</span>
+                                            {% elif problem.status == 'in_bearbeitung' %}
+                                                <span class="badge bg-info">In Bearbeitung</span>
+                                            {% elif problem.status == 'abgearbeitet' %}
+                                                <span class="badge bg-success">Abgearbeitet</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ problem.abteilung or '-' }}</td>
+                                        <td>{{ problem.bohrturm or '-' }}</td>
+                                        <td>{{ problem.status_changed_at.strftime('%d.%m.%Y %H:%M') if problem.status_changed_at else '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox display-1 text-muted"></i>
+                            <p class="text-muted mt-2">Keine Probleme vorhanden</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="dashboard-actions text-center">
+                <h5 class="mb-3">Schnellaktionen</h5>
+                <div class="btn-group-custom">
+                    <a href="{{ url_for('problem') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="bi bi-plus-circle me-2"></i>Neues Problem melden
+                    </a>
+                    <a href="{{ url_for('problems') }}" class="btn btn-outline-primary btn-lg me-3">
+                        <i class="bi bi-list-ul me-2"></i>Alle Probleme
+                    </a>
+                    {% if is_admin %}
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="bi bi-people me-2"></i>Benutzer verwalten
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
