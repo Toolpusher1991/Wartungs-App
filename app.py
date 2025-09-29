@@ -1396,6 +1396,32 @@ def delete_problem(problem_id):
     
     return render_template('delete_problem.html', problem=problem, is_admin=is_admin)
 
+@app.route('/mark_problem_resolved/<int:problem_id>', methods=['POST'])
+def mark_problem_resolved(problem_id):
+    """Problem als fertiggestellt markieren"""
+    if 'user' not in session:
+        flash('Bitte loggen Sie sich ein.', 'error')
+        return redirect(url_for('login'))
+    
+    problem = Problem.query.get_or_404(problem_id)
+    current_user = session.get('user')
+    
+    # Problem als behoben markieren
+    problem.behoben = True
+    problem.status = 'fertiggestellt'
+    problem.status_changed_at = datetime.now(timezone.utc)
+    
+    try:
+        db.session.commit()
+        flash(f'Problem "{problem.problem}" wurde als fertiggestellt markiert!', 'success')
+        app.logger.info(f'Problem {problem_id} als fertiggestellt markiert von {current_user}')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Speichern: {str(e)}', 'error')
+        app.logger.error(f'Fehler beim Markieren als fertiggestellt: {str(e)}')
+    
+    return redirect(url_for('problems'))
+
 @app.route('/edit_problem/<int:problem_id>', methods=['GET', 'POST'])
 def edit_problem(problem_id):
     if 'user' not in session:

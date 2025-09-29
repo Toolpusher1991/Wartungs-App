@@ -656,7 +656,20 @@
                 </div>
                 
                 <!-- Modal Footer -->
-                <div class="modal-footer border-top d-flex justify-content-center">
+                <div class="modal-footer border-top d-flex justify-content-between">
+                    <!-- Fertiggestellt Button -->
+                    {% if not p.behoben %}
+                    <form method="post" action="{{ url_for('mark_problem_resolved', problem_id=p.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Problem als fertiggestellt markieren?')">
+                            <i class="bi bi-check-circle me-1"></i>Fertiggestellt
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="badge bg-success fs-6">
+                        <i class="bi bi-check-circle me-1"></i>Bereits Fertiggestellt
+                    </span>
+                    {% endif %}
+                    
                     <!-- Schließen Button -->
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="bi bi-x-circle me-1"></i>Schließen
